@@ -29,9 +29,7 @@ public class TransferController {
 
     @GetMapping
     public ModelAndView getTransfersPage(@AuthenticationPrincipal AuthenticationUserDetails principal) {
-
         UserDto user = userService.getById(principal.getId());
-
         ModelAndView modelAndView = new ModelAndView("transfer");
         modelAndView.addObject("user", user);
         modelAndView.addObject("transferRequest", TransferRequest.builder().build());
@@ -47,11 +45,11 @@ public class TransferController {
         UserDto user = userService.getById(principal.getId());
 
         if (bindingResult.hasErrors()) {
-           ModelAndView modelAndView = new ModelAndView("transfer");
-           modelAndView.addObject("transferRequest", transferRequest);
-           modelAndView.addObject("user", user);
+            ModelAndView modelAndView = new ModelAndView("transfer");
+            modelAndView.addObject("transferRequest", transferRequest);
+            modelAndView.addObject("user", user);
 
-           return modelAndView;
+            return modelAndView;
         }
 
         TransactionDto transaction =  walletService.transferFunds(user, transferRequest);
