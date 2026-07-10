@@ -21,4 +21,8 @@ public class NotificationService {
     public ResponseEntity<List<NotificationResponse>> getNotificationsHistory(String userId) {
         return notificationClient.getHistory(userId, apiKey);
     }
+
+    public ResponseEntity<Void> retryFailedNotifications(String userId) {
+        return notificationClient.retryFailedNotification(userId, apiKey);
+    }
 }
