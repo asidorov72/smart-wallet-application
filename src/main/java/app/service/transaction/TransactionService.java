@@ -1,5 +1,6 @@
 package app.service.transaction;
 
+import app.exception.transaction.TransactionNotFoundException;
 import app.mapper.transaction.TransactionMapper;
 import app.model.dto.transaction.TransactionDto;
 import app.model.dto.wallet.WalletDto;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class TransactionService {
 
-    private TransactionRepository transactionRepository;
+    private final TransactionRepository transactionRepository;
 
     @Autowired
     public TransactionService(TransactionRepository transactionRepository) {
@@ -60,7 +61,7 @@ public class TransactionService {
 
     public TransactionDto getById(String id) {
         Transaction transaction = transactionRepository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + id));
+                .orElseThrow(() -> new TransactionNotFoundException(id));
         return TransactionMapper.toDto(transaction);
     }
 
@@ -75,7 +76,7 @@ public class TransactionService {
     public List<TransactionDto> getLastFourTransactionsByWallet(WalletDto wallet) {
 
         return transactionRepository.findAllBySenderOrReceiverOrderByCreatedOnDesc(
-                        wallet.getId().toString(), wallet.getId().toString()
+                wallet.getId().toString(), wallet.getId().toString()
                 )
                 .stream()
                 .filter(t -> t.getOwner().getId() == wallet.getOwner().getId())

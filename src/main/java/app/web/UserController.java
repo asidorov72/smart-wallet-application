@@ -1,5 +1,6 @@
 package app.web;
 
+import app.exception.user.UserNotFoundException;
 import app.model.dto.user.EditUserRequest;
 import app.model.dto.user.UserDto;
 import app.service.user.UserService;
