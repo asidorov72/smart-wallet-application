@@ -3,8 +3,6 @@ package app.web;
 import app.model.dto.notification.NotificationResponse;
 import app.service.notification.NotificationService;
 import app.service.user.AuthenticationUserDetails;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,28 +11,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/notifications")
-@RequiredArgsConstructor
 public class NotificationController {
 
     private final NotificationService notificationService;
 
-    @GetMapping()
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+
+    @GetMapping
     public ModelAndView getNotifications(@AuthenticationPrincipal AuthenticationUserDetails principal) {
 
-        List<NotificationResponse> notificationsHistory = notificationService
-                .getNotificationsHistory(principal.getId().toString())
-                .getBody()
+        List<NotificationResponse> notificationsHistory = Objects.requireNonNull(notificationService
+                        .getNotificationsHistory(principal.getId().toString()).getBody())
                 .stream()
                 .limit(5)
                 .toList();
 
         ModelAndView modelAndView = new ModelAndView("notifications");
         modelAndView.addObject("notificationsHistory", notificationsHistory);
-
         return modelAndView;
     }
 
@@ -43,10 +43,17 @@ public class NotificationController {
         notificationService.retryFailedNotifications(principal.getId().toString());
         return new ModelAndView("redirect:/notifications");
     }
-
-//    @GetMapping("/test-history")
-//    public ResponseEntity<List<NotificationResponse>> getNotifications(
-//            @RequestParam String userId) {
-//        return notificationService.getNotificationsHistory(userId);
-//    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
