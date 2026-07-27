@@ -15,6 +15,8 @@ import app.service.subscription.SubscriptionService;
 import app.service.wallet.WalletService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -34,8 +36,6 @@ public class UserService implements UserDetailsService {
     private SubscriptionService subscriptionService;
     private WalletService walletService;
 
-    private static final String CURRENT_USER_ID = "1ec88fb5-573b-45ca-98dd-e53e540615a6";
-
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SubscriptionService subscriptionService, WalletService walletService) {
         this.userRepository = userRepository;
@@ -44,13 +44,14 @@ public class UserService implements UserDetailsService {
         this.walletService = walletService;
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public UserDto register(UserRegisterRequest userRegisterRequest) {
         //   1.	Account Creation: Validate the username to ensure its unique and store the user’s details securely.
         //   You must consider persisting user’s sensitive data in a secure way!
 
         userRepository.findByUsername(userRegisterRequest.getUsername())
                 .ifPresent(user -> {
-                    throw new UserAlreadyExistsException(user.getUsername());
+                    throw new UserAlreadyExistsException("User with this username already exists!");
                 });
 
         String encodedPassword = passwordEncoder.encode(userRegisterRequest.getPassword());
@@ -58,34 +59,6 @@ public class UserService implements UserDetailsService {
 
 
         User userEntity = UserMapper.toUserEntity(userRegisterRequest);
-
-        //  3.Default Subscription Setup: Assign a free subscription to the user upon registration
-        Subscription defaultSubscription = subscriptionService.createDefaultSubscription(userEntity);
-        userEntity.setSubscriptions(List.of(defaultSubscription));
-
-        //  2.Default Wallet Creation: Automatically create a wallet for the user
-        Wallet defaultWallet = walletService.createDefaultWallet(userEntity);
-        userEntity.setWallets(List.of(defaultWallet));
-
-        userRepository.save(userEntity);
-
-        return UserMapper.toUserDto(userEntity);
-    }
-
-    public UserDto registerAdmin(UserRegisterRequest userRegisterRequest) {
-        //   1.	Account Creation: Validate the username to ensure its unique and store the user’s details securely.
-        //   You must consider persisting user’s sensitive data in a secure way!
-
-        userRepository.findByUsername(userRegisterRequest.getUsername())
-                .ifPresent(user -> {
-                    throw new UserAlreadyExistsException(user.getUsername());
-                });
-
-        String encodedPassword = passwordEncoder.encode(userRegisterRequest.getPassword());
-        userRegisterRequest.setPassword(encodedPassword);
-
-
-        User userEntity = UserMapper.toAdminEntity(userRegisterRequest);
 
         //  3.Default Subscription Setup: Assign a free subscription to the user upon registration
         Subscription defaultSubscription = subscriptionService.createDefaultSubscription(userEntity);
@@ -111,10 +84,7 @@ public class UserService implements UserDetailsService {
         return UserMapper.toUserDto(user);
     }
 
-//    public UserDto getById() {
-//        return getById(CURRENT_USER_ID);
-//    }
-
+    @CacheEvict(value = "users", allEntries = true)
     public UserDto update(String id, EditUserRequest editUserRequest) {
         User entity = userRepository.findById(UUID.fromString(id))
                 .orElseThrow(
@@ -131,13 +101,16 @@ public class UserService implements UserDetailsService {
         return UserMapper.toUserDto(updatedUser);
     }
 
+    @Cacheable("users")
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserDto> getAllUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(UserMapper::toUserDto).toList();
+                .map(UserMapper::toUserDto)
+                .toList();
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("hasRole('ADMIN')")
     public void switchStatus(UUID id) {
         User user = userRepository.findById(id)
@@ -148,6 +121,8 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+
+    @CacheEvict(value = "users", allEntries = true)
     @PreAuthorize("hasRole('ADMIN')")
     public void switchRole(UUID id) {
         User user = userRepository.findById(id)
@@ -164,6 +139,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
 

@@ -33,7 +33,7 @@ public class UserInit implements CommandLineRunner {
                 .country(Country.BULGARIA)
                 .build();
 
-        userService.registerAdmin(userRegisterRequest);
+        //userService.registerAdmin(userRegisterRequest);
 
         log.info("Default user created with username: [%s] and password: [%s]".formatted(
                 userRegisterRequest.getUsername(), userRegisterRequest.getPassword()));

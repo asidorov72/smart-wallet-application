@@ -1,18 +1,23 @@
 package app.service.subscription;
 
-import app.mapper.subscription.SubscriptionMapper;
 import app.model.entity.subscription.Subscription;
+import app.model.entity.subscription.SubscriptionPeriod;
+import app.model.entity.subscription.SubscriptionStatus;
+import app.model.entity.subscription.SubscriptionType;
 import app.model.entity.user.User;
 import app.repository.subscription.SubscriptionRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
 public class SubscriptionService {
 
-    private final SubscriptionRepository subscriptionRepository;
+    SubscriptionRepository subscriptionRepository;
 
     @Autowired
     public SubscriptionService(SubscriptionRepository subscriptionRepository) {
@@ -20,12 +25,23 @@ public class SubscriptionService {
     }
 
     public Subscription createDefaultSubscription(User user) {
-        Subscription subscription = SubscriptionMapper.toSubscriptionEntity(user);
+        LocalDateTime now = LocalDateTime.now();
 
-        // TODO: Log some proper info message
+        Subscription subscription = Subscription.builder()
+                .owner(user)
+                .period(SubscriptionPeriod.MONTHLY)
+                .status(SubscriptionStatus.ACTIVE)
+                .type(SubscriptionType.DEFAULT)
+                .price(BigDecimal.valueOf(0.00))
+                .completedOn(now.plusMonths(1))
+                .renewalAllowed(true)
+                .createdOn(now)
+                .build();
+
+        //TODO: Log some proper info message
         subscriptionRepository.save(subscription);
 
         return subscription;
     }
-
+    //TODO: implement monthly subscription by using @Scheduled
 }
