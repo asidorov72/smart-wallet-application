@@ -1,7 +1,5 @@
 package app.service.notification.client;
 
-import app.model.dto.notification.NotificationPreferenceRequest;
-import app.model.dto.notification.NotificationPreferenceResponse;
 import app.model.dto.notification.NotificationRequest;
 import app.model.dto.notification.NotificationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -10,9 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(
-        name = "notification-client",
-        contextId = "notificationClient",
+@FeignClient(name = "notification-client",
         url = "${notification.base-url}"
 )
 public interface NotificationClient {
@@ -22,25 +18,25 @@ public interface NotificationClient {
     @GetMapping()
     ResponseEntity<List<NotificationResponse>> getHistory(
             @RequestParam("userId") String userId,
-            @RequestHeader(X_API_KEY) String xApiKey
-    );
+            @RequestHeader(X_API_KEY) String xApiKey);
+
 
     @PostMapping
     ResponseEntity<NotificationResponse> sendNotification(
-            @RequestBody NotificationRequest request,
-            @RequestHeader(X_API_KEY) String xApiKey
+        @RequestBody NotificationRequest notificationRequest,
+        @RequestHeader(X_API_KEY) String xApiKey
     );
 
     @PutMapping
     ResponseEntity<Void> retryFailedNotification(
-            @RequestParam("userId") String userId,
+            @RequestParam String userId,
             @RequestHeader(X_API_KEY) String xApiKey
     );
 
     @DeleteMapping
     ResponseEntity<Void> deleteAll(
-            @RequestParam("userId") String userId,
+            @RequestParam String userId,
             @RequestHeader(X_API_KEY) String xApiKey
     );
-
 }
+

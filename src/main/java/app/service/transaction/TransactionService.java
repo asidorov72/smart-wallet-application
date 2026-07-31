@@ -9,6 +9,7 @@ import app.model.entity.transaction.TransactionStatus;
 import app.model.entity.transaction.TransactionType;
 import app.model.entity.user.User;
 import app.repository.transaction.TransactionRepository;
+import app.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +24,12 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final NotificationService notificationService;
 
     @Autowired
-    public TransactionService(TransactionRepository transactionRepository) {
+    public TransactionService(TransactionRepository transactionRepository, NotificationService notificationService) {
         this.transactionRepository = transactionRepository;
+        this.notificationService = notificationService;
     }
 
     public Transaction createNewTransaction(User owner,
@@ -55,6 +58,9 @@ public class TransactionService {
                 .failureReason(failureReason)
                 .createdOn(java.time.LocalDateTime.now())
                 .build();
+
+        String emailBody = "%s transaction was successful processed for you with amount %.2f EUR!".formatted(transaction.getType(), transaction.getAmount());
+        notificationService.sendNotification(transaction.getOwner().getId(), "New Smart Wallet Transaction", emailBody);
 
         return transactionRepository.save(transaction);
     }
