@@ -1,0 +1,59 @@
+services:
+  smart-wallet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: smart-wallet-application:0.0.1-SNAPSHOT
+    container_name: smart-wallet-application
+
+    restart: always
+
+    env_file:
+      - .env
+
+    ports:
+      - "8093:8093"
+
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    external: true
+    name: notification-service-java-web_default
+
+
+# Общая Docker-сеть:
+#
+# notification-service-java-web_default
+#        │
+#        ├── smart-wallet-application:8093
+#        ├── notification-svc:8094
+#        └── mysql-standalone:3306
+#
+#
+# Smart Wallet:
+#
+# smart-wallet-application
+#        │
+#        ├── prod profile
+#        ├── переменные из .env
+#        ├── HTTP port 8093
+#        ├── MySQL:
+#        │      mysql-standalone:3306
+#        │
+#        └── Notification Service:
+#               notification-svc:8094
+#
+#
+# Перед запуском:
+#
+# mvn clean package
+#
+# docker compose down
+# docker compose up -d --build --force-recreate
+#
+# Логи:
+#
+# docker compose logs -f smart-wallet
